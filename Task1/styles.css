@@ -1,0 +1,92 @@
+.container {
+  margin: 40px 200px;
+  width: 900px;
+  box-sizing: border-box;
+  border: 1px solid black;
+  overflow: auto;
+  align-self: center;
+}
+
+.header-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.logo {
+  width: 250px;
+  height: 90px;
+  margin: 25px;
+  flex: 50%;
+}
+
+.logo img {
+  background-color: black;
+}
+
+.barcode {
+  text-align: right;
+  margin: 25px 25px 0 25px;
+  display: grid;
+}
+
+#work {
+  text-align: center;
+  margin-bottom: 0px;
+}
+
+.user-details {
+  margin: 10px 30px;
+  box-sizing: border-box;
+  border: 1px solid black;
+}
+
+.name {
+  margin-top: 10px;
+  margin-left: 10px;
+  width: 45%;
+  display: inline-grid;
+}
+
+.right-label {
+  display: inline-grid;
+}
+
+.lastline-text {
+  margin-bottom: 10px;
+}
+
+.row {
+  width: 418px;
+  padding-left: 20px;
+  padding-top: 5px;
+}
+/* 
+.order-table {
+  width: 800px;
+} */
+
+.center {
+  padding: 0 50px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.order-col1 {
+  width: 15%;
+}
+
+.order-col2 {
+  width: 22%;
+}
+
+.order-col3 {
+  width: 30%;
+}
+
+.order-col4 {
+  width: 18%;
+}
+
+.order-col5 {
+  width: 15%;
+}
