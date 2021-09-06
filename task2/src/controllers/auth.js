@@ -2,6 +2,7 @@ const { authenticateUser, signJWT } = require("../services/authService");
 const { createUser, updateUser } = require("../services/userService");
 const { validationResult } = require("express-validator");
 const User = require("../models/user");
+const sharp = require("sharp");
 
 exports.Login = async function (req, res) {
   const errors = validationResult(req);
@@ -78,4 +79,12 @@ exports.getProfilePic = async (req, res) => {
   } catch (e) {
     res.status(500).send();
   }
+};
+
+exports.uploadFile = (req, res) => {
+  // console.log(req.file);
+  // console.log(req.body);
+  //console.log(req.file.location)
+  //console.log(req.file.buffer)
+  res.send({ url: req.file.location });
 };

@@ -1,16 +1,4 @@
-const express = require("express");
-const auth = require("../middleware/auth");
-const router = express.Router();
-const UserController = require("../controllers/users");
-const { UpdateProfileValidator } = require("../middleware/validators");
-
 router.post("/profile", UserController.GetUserProfile);
-router.post("/getUsers", UserController.getUsers);
-router.post(
-  "/updateProfile",
-  UpdateProfileValidator,
-  UserController.UpdateUserProfile
-);
 
 const multer = require("multer");
 

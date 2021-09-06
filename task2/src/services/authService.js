@@ -33,16 +33,3 @@ exports.signJWT = async (email) => {
   if (jwtoken) return jwtoken;
   throw "Error signing JWT";
 };
-
-// exports.GetUser = async (credentials) => {
-//   // console.log(credentials);
-//   try {
-//     const user = await User.findOne({ email: credentials.email });
-//     console.log("user", user);
-//     // if (!user) {
-//     //   throw "Invalid Credentials";
-//     // }
-//   } catch (error) {
-//     throw error;
-//   }
-// };
