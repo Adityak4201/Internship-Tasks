@@ -2,7 +2,7 @@ const { authenticateUser, signJWT } = require("../services/authService");
 const { createUser, updateUser } = require("../services/userService");
 const { validationResult } = require("express-validator");
 const User = require("../models/user");
-const sharp = require("sharp");
+// const sharp = require("sharp");
 
 exports.Login = async function (req, res) {
   const errors = validationResult(req);
@@ -12,6 +12,7 @@ exports.Login = async function (req, res) {
   const { email, password } = req.body;
   try {
     const user = await authenticateUser({ email, password });
+    // console.log(user);
     const token = await signJWT(user.email);
     //console.log(token);
     return res.json({ user, token });
@@ -54,37 +55,24 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-exports.uploadProfilePic = async (req, res) => {
-  const buffer = await sharp(req.file.buffer)
-    .resize({ width: 250, height: 250 })
-    .png()
-    .toBuffer();
-  const user = await User.findOne({ email: req.user.email });
-  if (!user) {
-    res.status(400).json({ error: "User not found" });
+exports.UpdateUserProfile = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
-  user.avatar = buffer;
-  await user.save();
-  res.send({ email: req.user.email });
-};
-
-exports.getProfilePic = async (req, res) => {
+  const { email, password, firstName, lastName, phone } = req.body;
+  // console.log(email, password, firstName, lastName, phone);
   try {
-    const user = await User.findOne({ email: req.user.email });
-    if (!user || !user.avatar) {
-      res.status(400).send({ error: "user/user-avatar not found" });
-    }
-    res.set("Content-Type", "image/png");
-    res.send(user.avatar);
-  } catch (e) {
-    res.status(500).send();
+    const updatedUser = await updateUser({
+      email,
+      password,
+      phone,
+      firstName,
+      lastName,
+    });
+    // console.log(updatedUser);
+    return res.send({ user: updatedUser });
+  } catch (error) {
+    res.status(402).json({ error });
   }
-};
-
-exports.uploadFile = (req, res) => {
-  // console.log(req.file);
-  // console.log(req.body);
-  //console.log(req.file.location)
-  //console.log(req.file.buffer)
-  res.send({ url: req.file.location });
 };

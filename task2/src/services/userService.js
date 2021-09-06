@@ -19,14 +19,14 @@ exports.updateUser = async (userData) => {
   try {
     // console.log("userData", userData);
     const filter = { email: userData.email };
+    const hashedPassword = await argon2.hash(userData.password);
+    userData.password = hashedPassword;
     const update = {
       firstName: userData.firstName,
       lastName: userData.lastName,
-      dob: userData.dob,
-      gender: userData.gender,
-      country: userData.country,
-      state: userData.state,
-      organization: userData.organization,
+      email: userData.email,
+      password: userData.password,
+      phone: userData.phone,
     };
     let user = await User.findOneAndUpdate(filter, update, {
       new: true,
@@ -35,7 +35,7 @@ exports.updateUser = async (userData) => {
     if (!user) {
       throw "User Not Found";
     }
-    // console.log("userService", user);
+    // console.log(user);
     delete user.password;
     return user;
   } catch (error) {

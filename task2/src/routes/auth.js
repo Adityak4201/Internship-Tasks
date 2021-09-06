@@ -10,11 +10,11 @@ const {
 
 router.post("/login", LoginValidator, AuthController.Login);
 router.post("/register", RegisterValidator, AuthController.Register);
-router.post("/getUsers", UserController.getUsers);
+router.get("/getUsers", AuthController.getUsers);
 router.post(
   "/updateProfile",
   UpdateProfileValidator,
-  UserController.UpdateUserProfile
+  AuthController.UpdateUserProfile
 );
 
 module.exports = router;

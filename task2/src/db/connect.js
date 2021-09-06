@@ -5,7 +5,6 @@ const connectMongoDB = () => {
     mongoose.connect(process.env.MONGO_URL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      useCreateIndex: true,
     });
     const db = mongoose.connection;
     db.on("error", (error) => console.error(error));
