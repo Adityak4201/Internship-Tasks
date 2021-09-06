@@ -1,20 +1,7 @@
 const { authenticateUser, signJWT } = require("../services/authService");
-const {
-  createUser,
-  createAdmin,
-  findUserByEmail,
-  findUsersByUserType,
-  updateUser,
-  UpdatePassword,
-  sendEmail,
-  updateOtp,
-  checkotp,
-  addEpAd
-} = require("../services/userService");
+const { createUser, updateUser } = require("../services/userService");
 const { validationResult } = require("express-validator");
-const utils = require("../utils/utils");
 const User = require("../models/user");
-const epAd = require("../models/epAd");
 
 exports.Login = async function (req, res) {
   const errors = validationResult(req);
@@ -26,8 +13,7 @@ exports.Login = async function (req, res) {
     const user = await authenticateUser({ email, password });
     const token = await signJWT(user.email);
     //console.log(token);
-    const userObj = utils.getCleanUser(user);
-    return res.json({ user: userObj, token });
+    return res.json({ user, token });
   } catch (error) {
     return res.status(401).json({ errors: error });
   }
@@ -39,29 +25,13 @@ exports.Register = async function (req, res) {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  const {
-    email,
-    password,
-    firstName,
-    lastName,
-    dob,
-    gender,
-    country,
-    state,
-    organization,
-    phone,
-  } = req.body;
+  const { email, password, firstName, lastName, phone } = req.body;
   try {
     const createdUser = await createUser({
       email,
       password,
       firstName,
       lastName,
-      dob,
-      gender,
-      country,
-      state,
-      organization,
       phone,
     });
     // console.log(createdUser);
@@ -72,84 +42,9 @@ exports.Register = async function (req, res) {
   }
 };
 
-exports.GetMyProfile = async function (req, res) {
-  return res.status(200).json({ message: "WIP" });
-};
-exports.RegisterAdmin = async function (req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  const { email, password, firstName, lastName, dob, gender } = req.body;
-  try {
-    const createdAdmin = await createAdmin({
-      email,
-      password,
-    });
-    // console.log(createdUser);
-    delete createdAdmin.password;
-    return res.send(createdAdmin);
-  } catch (error) {
-    res.status(402).json({ errors: error });
-  }
-};
-
-exports.GetUserProfile = async function (req, res) {
-  try {
-    const { email } = req.body;
-    // console.log(email);
-    const user = await findUserByEmail({ email });
-    // console.log("user", user);
-    const userObj = utils.getCleanUser(user);
-    return res.status(200).json({ user: userObj });
-  } catch (error) {
-    res.status(402).json({ errors: error });
-  }
-};
-
-exports.UpdateUserProfile = async function (req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  const {
-    email,
-    firstName,
-    lastName,
-    dob,
-    gender,
-    country,
-    state,
-    organization,
-  } = req.body;
-  try {
-    // console.log(email);
-    const user = await updateUser({
-      email,
-      firstName,
-      lastName,
-      dob,
-      gender,
-      country,
-      state,
-      organization,
-    });
-    // console.log("controller", user);
-
-    const userObj = utils.getCleanUser(user);
-    return res.status(200).json({ user: userObj });
-  } catch (error) {
-    res.status(402).json({ errors: error });
-  }
-};
-
 exports.getUsers = async (req, res) => {
-  const { userType } = req.body;
-  if (!userType) {
-    res.status(405).json({ error: "User Type is Missing" });
-  }
   try {
-    const users = await findUsersByUserType({ userType });
+    const users = await User.find();
     // console.log(users);
     return res.status(200).json({ users });
   } catch (error) {
@@ -158,99 +53,29 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-exports.UpdateUserPassword = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+exports.uploadProfilePic = async (req, res) => {
+  const buffer = await sharp(req.file.buffer)
+    .resize({ width: 250, height: 250 })
+    .png()
+    .toBuffer();
+  const user = await User.findOne({ email: req.user.email });
+  if (!user) {
+    res.status(400).json({ error: "User not found" });
   }
-  const {
-    email,
-    password,
-    newpassword
-  } = req.body;
-  try {
-    const user1 = await authenticateUser({ email, password });
-    const user = await UpdatePassword({
-      email,
-      newpassword
-    });
-    const userObj = utils.getCleanUser(user);
-    return res.status(200).json({ user: userObj });
-  } catch (error) {
-    res.status(402).json({ errors: error });
-  }
+  user.avatar = buffer;
+  await user.save();
+  res.send({ email: req.user.email });
 };
 
-exports.getotp = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  const {
-    email
-  } = req.body;
+exports.getProfilePic = async (req, res) => {
   try {
-    const subject = "OTP"
-    const user = await User.findOne({ email: email });
-    if (!user) {
-      throw "Invalid Credentials";
+    const user = await User.findOne({ email: req.user.email });
+    if (!user || !user.avatar) {
+      res.status(400).send({ error: "user/user-avatar not found" });
     }
-    const otp = await sendEmail(email, subject);
-    const use = await updateOtp({
-      email,
-      otp
-    });
-    const userObj = utils.getCleanUser(user);
-    res.status(200).json({ OTP: otp, User: userObj })
-  } catch (error) {
-    res.status(402).json({ errors: error });
+    res.set("Content-Type", "image/png");
+    res.send(user.avatar);
+  } catch (e) {
+    res.status(500).send();
   }
-}
-
-exports.ResetUserPassword = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  const {
-    email,
-    otp,
-    newpassword
-  } = req.body;
-  try {
-    const check = await checkotp(otp,email);
-    if (check == true){
-      const user = await UpdatePassword({
-        email,
-        newpassword
-      });
-      const userObj = utils.getCleanUser(user);
-      return res.status(200).json({ user: userObj });
-      }
-    } catch (error) {
-      res.status(402).json({ errors: error });
-    }
 };
-
-exports.addEpAd = async (req,res) => {
-  try {
-    const { episode_id, episode_name } = req.body;
-    const user = await addEpAd({
-      episode_id,
-      episode_name
-    });
-    res.status(200).json({ episode: user });
-  } catch (error) {
-    res.status(402).json({ errors: error });
-  }
-}
-
-exports.fetchEdAd = async (req,res) =>{
-  try {
-    const { episode_name } = req.body;
-    const ep = await epAd.findAll({ where: {episode_name:episode_name}});
-    res.status(200).json({ EpAd:ep });
-  } catch (error) {
-    res.status(402).json({ errors: error });
-  }
-}
